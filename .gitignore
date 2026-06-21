@@ -1,0 +1,5 @@
+node_modules
+inventory.db
+.env
+backend/inventory.db
+inventory.db
