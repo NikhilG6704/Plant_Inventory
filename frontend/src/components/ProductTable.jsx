@@ -9,6 +9,7 @@ function ProductTable({
   products,
   refreshProducts,
   title = "Inventory Assets",
+  isSearching = false,
 }) {
   const [showDamageModal, setShowDamageModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
@@ -25,16 +26,26 @@ function ProductTable({
     })),
   );
 
+  // Latest assets first
+  const sortedItems = [...allItems].sort(
+    (a, b) => new Date(b.dateAdded) - new Date(a.dateAdded),
+  );
+
+  // Show only latest 20 when not searching
+  const displayItems = isSearching ? sortedItems : sortedItems.slice(0, 20);
+
   return (
     <>
       <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
         <div className="px-6 py-4 border-b">
           <h2 className="text-2xl font-bold text-gray-800">{title}</h2>
 
-          <p className="text-gray-500 mt-1">Total Assets: {allItems.length}</p>
+          <p className="text-gray-500 mt-1">
+            Showing {displayItems.length} of {allItems.length} Assets
+          </p>
         </div>
 
-        {allItems.length === 0 ? (
+        {displayItems.length === 0 ? (
           <div className="p-8 text-center text-gray-500">No assets found.</div>
         ) : (
           <div className="overflow-x-auto">
@@ -57,7 +68,7 @@ function ProductTable({
               </thead>
 
               <tbody>
-                {allItems.map((item, index) => (
+                {displayItems.map((item, index) => (
                   <AssetRow
                     key={`${item.serialNumber}-${index}`}
                     item={item}

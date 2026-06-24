@@ -5,9 +5,11 @@ function AssetSelectionList({
   setAssetId,
 }) {
   return (
-    <div className="border rounded-lg max-h-80 overflow-y-auto">
+    <div className="border rounded-lg">
       {filteredAssets.length === 0 ? (
-        <div className="p-4 text-gray-500">No matching assets found</div>
+        <div className="p-6 text-center text-gray-500">
+          Search for an asset to view results
+        </div>
       ) : (
         filteredAssets.map((asset) => (
           <button

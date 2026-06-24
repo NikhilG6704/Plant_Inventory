@@ -8,6 +8,10 @@ function DamagedProducts() {
   const [damagedAssets, setDamagedAssets] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
+
   useEffect(() => {
     loadDamagedAssets();
   }, []);
@@ -25,7 +29,29 @@ function DamagedProducts() {
   };
 
   const handleExportDamaged = () => {
-    const exportData = damagedAssets.map((item) => ({
+    if (!fromDate || !toDate) {
+      toast.error("Please select a date range");
+      return;
+    }
+
+    const filteredData = damagedAssets.filter((item) => {
+      if (!item.damaged_date) return false;
+
+      const damagedDate = new Date(item.damaged_date);
+      const startDate = new Date(fromDate);
+      const endDate = new Date(toDate);
+
+      endDate.setHours(23, 59, 59, 999);
+
+      return damagedDate >= startDate && damagedDate <= endDate;
+    });
+
+    if (filteredData.length === 0) {
+      toast.error("No records found for selected date range");
+      return;
+    }
+
+    const exportData = filteredData.map((item) => ({
       Asset: item.item_name,
       Item_Code: item.item_code,
       Serial_Number: item.serial_number,
@@ -36,6 +62,7 @@ function DamagedProducts() {
     }));
 
     exportToExcel(exportData, "Damaged_Assets");
+    setShowExportModal(false);
   };
 
   if (loading) {
@@ -62,7 +89,7 @@ function DamagedProducts() {
           </div>
 
           <button
-            onClick={handleExportDamaged}
+            onClick={() => setShowExportModal(true)}
             className="
               flex items-center gap-2
               bg-green-600 hover:bg-green-700
@@ -133,6 +160,54 @@ function DamagedProducts() {
           </div>
         )}
       </div>
+
+      {showExportModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-2xl shadow-xl w-full max-w-md">
+            <h3 className="text-xl font-bold mb-4">Export Damaged Assets</h3>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block mb-1 font-medium">From Date</label>
+
+                <input
+                  type="date"
+                  value={fromDate}
+                  onChange={(e) => setFromDate(e.target.value)}
+                  className="w-full border rounded-lg p-2"
+                />
+              </div>
+
+              <div>
+                <label className="block mb-1 font-medium">To Date</label>
+
+                <input
+                  type="date"
+                  value={toDate}
+                  onChange={(e) => setToDate(e.target.value)}
+                  className="w-full border rounded-lg p-2"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  onClick={() => setShowExportModal(false)}
+                  className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  onClick={handleExportDamaged}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                >
+                  Export
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

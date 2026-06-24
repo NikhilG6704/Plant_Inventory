@@ -51,6 +51,17 @@
     "mac": {
       "target": "dir",
       "icon": "build/icon.icns"
-    }
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "NikhilG6704",
+        "repo": "Plant_Inventory"
+      }
+    ]
+  },
+  "dependencies": {
+    "electron-log": "^5.4.4",
+    "electron-updater": "^6.8.9"
   }
 }

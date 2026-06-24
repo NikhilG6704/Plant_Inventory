@@ -38,24 +38,36 @@ function IssueForm({ refreshIssuedAssets }) {
     }
   };
 
-  const filteredAssets = assets.filter((asset) => {
-    return (
-      (nameFilter === "" ||
-        asset.item_name?.toLowerCase().includes(nameFilter.toLowerCase())) &&
-      (itemCodeFilter === "" ||
-        asset.item_code
-          ?.toLowerCase()
-          .includes(itemCodeFilter.toLowerCase())) &&
-      (serialFilter === "" ||
-        asset.serial_number
-          ?.toLowerCase()
-          .includes(serialFilter.toLowerCase())) &&
-      (descriptionFilter === "" ||
-        asset.description
-          ?.toLowerCase()
-          .includes(descriptionFilter.toLowerCase()))
-    );
-  });
+  const hasSearch =
+    nameFilter.trim() ||
+    itemCodeFilter.trim() ||
+    serialFilter.trim() ||
+    descriptionFilter.trim();
+
+  const filteredAssets = hasSearch
+    ? assets
+        .filter((asset) => {
+          return (
+            (nameFilter === "" ||
+              asset.item_name
+                ?.toLowerCase()
+                .includes(nameFilter.toLowerCase())) &&
+            (itemCodeFilter === "" ||
+              asset.item_code
+                ?.toLowerCase()
+                .includes(itemCodeFilter.toLowerCase())) &&
+            (serialFilter === "" ||
+              asset.serial_number
+                ?.toLowerCase()
+                .includes(serialFilter.toLowerCase())) &&
+            (descriptionFilter === "" ||
+              asset.description
+                ?.toLowerCase()
+                .includes(descriptionFilter.toLowerCase()))
+          );
+        })
+        .slice(0, 50)
+    : [];
 
   const handleSubmit = async (e) => {
     e.preventDefault();
