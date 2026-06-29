@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { getAssets, issueAsset } from "../services/api";
 import toast from "react-hot-toast";
+
 import AssetSearchFilters from "./IssueFormHelper/AssetSearchFilters";
 import AssetSelectionList from "./IssueFormHelper/AssetSelectionList";
 import SelectedAssetCard from "./IssueFormHelper/SelectedAssetCard";
 import IssueDetailsForm from "./IssueFormHelper/IssueDetailsForm";
+
 function IssueForm({ refreshIssuedAssets }) {
   const [assets, setAssets] = useState([]);
 
@@ -20,6 +22,8 @@ function IssueForm({ refreshIssuedAssets }) {
   const [department, setDepartment] = useState("");
   const [remark, setRemark] = useState("");
 
+  const [quantity, setQuantity] = useState(1);
+
   useEffect(() => {
     loadAssets();
   }, []);
@@ -29,12 +33,13 @@ function IssueForm({ refreshIssuedAssets }) {
       const data = await getAssets();
 
       const availableAssets = data.filter(
-        (asset) => asset.status === "Available",
+        (asset) => asset.available_quantity > 0,
       );
 
       setAssets(availableAssets);
     } catch (error) {
       console.error(error);
+      toast.error("Failed to load assets");
     }
   };
 
@@ -77,12 +82,33 @@ function IssueForm({ refreshIssuedAssets }) {
       return;
     }
 
+    if (!issuedTo.trim()) {
+      toast.error("Please enter Issued To");
+      return;
+    }
+
+    if (!department.trim()) {
+      toast.error("Please enter Department");
+      return;
+    }
+
+    if (quantity < 1) {
+      toast.error("Quantity must be at least 1");
+      return;
+    }
+
+    if (selectedAsset && quantity > selectedAsset.available_quantity) {
+      toast.error(`Only ${selectedAsset.available_quantity} item(s) available`);
+      return;
+    }
+
     try {
       await issueAsset({
         assetId,
         issuedTo,
         department,
         remark,
+        quantity,
       });
 
       toast.success("Asset issued successfully");
@@ -99,10 +125,15 @@ function IssueForm({ refreshIssuedAssets }) {
       setDepartment("");
       setRemark("");
 
+      setQuantity(1);
+
       await loadAssets();
-      refreshIssuedAssets();
+
+      if (refreshIssuedAssets) {
+        refreshIssuedAssets();
+      }
     } catch (error) {
-      toast.error(error.message);
+      toast.error(error.message || "Failed to issue asset");
     }
   };
 
@@ -116,7 +147,6 @@ function IssueForm({ refreshIssuedAssets }) {
       </p>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Search Filters */}
         <AssetSearchFilters
           nameFilter={nameFilter}
           setNameFilter={setNameFilter}
@@ -128,7 +158,6 @@ function IssueForm({ refreshIssuedAssets }) {
           setDescriptionFilter={setDescriptionFilter}
         />
 
-        {/* Asset Results */}
         <AssetSelectionList
           filteredAssets={filteredAssets}
           selectedAsset={selectedAsset}
@@ -136,9 +165,55 @@ function IssueForm({ refreshIssuedAssets }) {
           setAssetId={setAssetId}
         />
 
-        {/* Selected Asset */}
         <SelectedAssetCard selectedAsset={selectedAsset} />
-        {/* Issued Asset */}
+
+        {selectedAsset && (
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-5">
+            <h3 className="font-semibold text-lg mb-4">Quantity Details</h3>
+
+            <div className="grid md:grid-cols-3 gap-4">
+              <div>
+                <label className="block mb-2 text-sm font-medium">
+                  Total Quantity
+                </label>
+
+                <input
+                  value={selectedAsset.quantity || 0}
+                  readOnly
+                  className="w-full border rounded-lg p-3 bg-gray-100"
+                />
+              </div>
+
+              <div>
+                <label className="block mb-2 text-sm font-medium">
+                  Available Quantity
+                </label>
+
+                <input
+                  value={selectedAsset.available_quantity || 0}
+                  readOnly
+                  className="w-full border rounded-lg p-3 bg-green-50"
+                />
+              </div>
+
+              <div>
+                <label className="block mb-2 text-sm font-medium">
+                  Issue Quantity *
+                </label>
+
+                <input
+                  type="number"
+                  min="1"
+                  max={selectedAsset.available_quantity}
+                  value={quantity}
+                  onChange={(e) => setQuantity(Number(e.target.value))}
+                  className="w-full border rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
         <IssueDetailsForm
           issuedTo={issuedTo}
           setIssuedTo={setIssuedTo}
@@ -151,7 +226,18 @@ function IssueForm({ refreshIssuedAssets }) {
         <button
           type="submit"
           disabled={!assetId}
-          className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-6 py-3 rounded-lg transition"
+          className="
+            bg-blue-600
+            hover:bg-blue-700
+            disabled:bg-gray-400
+            disabled:cursor-not-allowed
+            text-white
+            px-6
+            py-3
+            rounded-lg
+            transition
+            font-medium
+          "
         >
           Issue Asset
         </button>

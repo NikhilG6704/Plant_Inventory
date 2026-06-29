@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS pr_master (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    pr_no TEXT UNIQUE NOT NULL,
+    pr_no TEXT NOT NULL,
     po_no TEXT,
     total_items INTEGER,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -16,6 +16,10 @@ CREATE TABLE IF NOT EXISTS assets (
     description TEXT,
 
     serial_number TEXT NOT NULL,
+
+    quantity INTEGER DEFAULT 1,
+    available_quantity INTEGER DEFAULT 1,
+    issued_quantity INTEGER DEFAULT 0,
 
     is_ilms INTEGER DEFAULT 0,
 
@@ -34,7 +38,6 @@ CREATE TABLE IF NOT EXISTS assets (
     FOREIGN KEY(pr_id)
     REFERENCES pr_master(id)
 );
-
 CREATE TABLE IF NOT EXISTS issue_history (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
 
@@ -43,6 +46,8 @@ CREATE TABLE IF NOT EXISTS issue_history (
     issued_to TEXT NOT NULL,
 
     department TEXT NOT NULL,
+
+    issued_quantity INTEGER DEFAULT 1,
 
     issue_date DATE NOT NULL,
 

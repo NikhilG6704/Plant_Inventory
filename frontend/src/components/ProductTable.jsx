@@ -27,18 +27,16 @@ function ProductTable({
     })),
   );
 
-  // Latest assets first
   const sortedItems = [...allItems].sort(
     (a, b) => new Date(b.dateAdded) - new Date(a.dateAdded),
   );
 
-  // Show only latest 20 when not searching
   const displayItems = isSearching ? sortedItems : sortedItems.slice(0, 20);
 
   return (
     <>
-      <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-        <div className="px-6 py-4 border-b">
+      <div className="bg-white rounded-2xl shadow-xl border border-gray-200">
+        <div className="px-6 py-5 border-b bg-gray-50">
           <h2 className="text-2xl font-bold text-gray-800">{title}</h2>
 
           <p className="text-gray-500 mt-1">
@@ -50,30 +48,35 @@ function ProductTable({
           <div className="p-8 text-center text-gray-500">No assets found.</div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-slate-800 text-white">
+            <table className="w-full text-base">
+              <thead className="bg-slate-900 text-white sticky top-0 z-10">
                 <tr>
-                  <th className="p-4 text-left">PR No</th>
-                  <th className="p-4 text-left">PO No</th>
-                  <th className="p-4 text-left">Name</th>
-                  <th className="p-4 text-left">Item Code</th>
-                  <th className="p-4 text-left">Description</th>
-                  <th className="p-4 text-left">Serial Number</th>
-                  <th className="p-4 text-left whitespace-nowrap">
+                  <th className="px-3 py-3 text-left">PR No</th>
+                  <th className="px-3 py-3 text-left">PO No</th>
+                  <th className="px-3 py-3 text-left">Name</th>
+                  <th className="px-3 py-3 text-left">Item Code</th>
+
+                  <th className="px-3 py-3 text-center">Available</th>
+                  <th className="px-3 py-3 text-center">Issued</th>
+
+                  <th className="px-3 py-3 text-left">Description</th>
+                  <th className="px-3 py-3 text-left">Serial Number</th>
+
+                  <th className="px-3 py-3 text-left whitespace-nowrap">
                     Date Added
                   </th>
-                  <th className="p-4 text-left">ILMS</th>
-                  <th className="p-4 text-left">Status</th>
-                  <th className="p-4 text-left">Action</th>
+
+                  <th className="px-3 py-3 text-center">ILMS</th>
+                  <th className="px-3 py-3 text-center">Status</th>
+                  <th className="px-3 py-3 text-center">⋮</th>
                 </tr>
               </thead>
 
               <tbody>
                 {displayItems.map((item, index) => (
                   <AssetRow
-                    key={`${item.serialNumber}-${index}`}
+                    key={`${item.id}-${index}`}
                     item={item}
-                    index={index}
                     isAdminUser={isAdmin()}
                     activeMenu={activeMenu}
                     setActiveMenu={setActiveMenu}
@@ -103,6 +106,7 @@ function ProductTable({
         selectedItem={selectedItem}
         refreshProducts={refreshProducts}
       />
+
       <EditModal
         showEditModal={showEditModal}
         setShowEditModal={setShowEditModal}

@@ -48,12 +48,24 @@ function Dashboard() {
         .map((item) => ({
           PR_Number: product.prNo,
           PO_Number: product.poNo,
-          Name: item.name,
+
+          Product_Name: item.name,
           Item_Code: item.itemCode,
-          Description: item.description,
-          Serial_Number: item.serialNumber,
+
+          Total_Quantity:
+            (item.availableQuantity || 0) + (item.issuedQuantity || 0),
+
+          Available_Quantity: item.availableQuantity || 0,
+          Issued_Quantity: item.issuedQuantity || 0,
+
+          Description: item.description || "",
+
+          Serial_Number: item.serialNumber || "N/A",
+
           Date_Added: item.dateAdded,
+
           ILMS: item.isILMS,
+
           Status: item.status,
         })),
     );
@@ -84,13 +96,20 @@ function Dashboard() {
 
         grouped[asset.pr_no].items.push({
           id: asset.id,
+
           name: asset.item_name,
           itemCode: asset.item_code,
           description: asset.description,
+
           serialNumber: asset.serial_number,
           dateAdded: asset.date_added,
+
           isILMS: asset.is_ilms ? "Yes" : "No",
           status: asset.status,
+
+          quantity: asset.quantity || 0,
+          availableQuantity: asset.available_quantity || 0,
+          issuedQuantity: asset.issued_quantity || 0,
         });
       });
 

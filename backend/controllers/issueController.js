@@ -6,7 +6,7 @@ const db = require("../database/db");
 
 const issueAsset = (req, res) => {
   try {
-    const { assetId, issuedTo, department, remark } = req.body;
+    const { assetId, issuedTo, department, remark, quantity } = req.body;
 
     const asset = db
       .prepare(
@@ -24,9 +24,17 @@ const issueAsset = (req, res) => {
       });
     }
 
-    if (asset.status === "Issued") {
+    const issueQty = Number(quantity);
+
+    if (!issueQty || issueQty < 1) {
       return res.status(400).json({
-        error: "Asset is already issued",
+        error: "Invalid quantity",
+      });
+    }
+
+    if (asset.available_quantity < issueQty) {
+      return res.status(400).json({
+        error: `Only ${asset.available_quantity} available`,
       });
     }
 
@@ -36,25 +44,33 @@ const issueAsset = (req, res) => {
         asset_id,
         issued_to,
         department,
+        issued_quantity,
         issue_date,
         issue_remark,
         status
       )
-      VALUES (?, ?, ?, DATE('now'), ?, 'Issued')
+      VALUES (?, ?, ?, ?, DATE('now'), ?, 'Issued')
     `,
-    ).run(assetId, issuedTo, department, remark);
+    ).run(assetId, issuedTo, department, issueQty, remark);
 
     db.prepare(
       `
       UPDATE assets
       SET
-        status = 'Issued',
+        available_quantity = available_quantity - ?,
+        issued_quantity = issued_quantity + ?,
         issue_date = DATE('now'),
         department = ?,
-        remarks = ?
+        remarks = ?,
+        status =
+          CASE
+            WHEN (available_quantity - ?) = 0
+            THEN 'Issued'
+            ELSE 'Available'
+          END
       WHERE id = ?
     `,
-    ).run(department, remark, assetId);
+    ).run(issueQty, issueQty, department, remark, issueQty, assetId);
 
     res.status(201).json({
       message: "Asset issued successfully",
@@ -82,6 +98,7 @@ const getIssuedAssets = (req, res) => {
           issue_history.asset_id,
           issue_history.issued_to,
           issue_history.department,
+          issue_history.issued_quantity,
           issue_history.issue_date,
           issue_history.issue_remark,
           issue_history.status,
@@ -127,6 +144,7 @@ const getReturnedAssets = (req, res) => {
           issue_history.asset_id,
           issue_history.issued_to,
           issue_history.department,
+          issue_history.issued_quantity,
           issue_history.issue_date,
           issue_history.actual_return_date,
           issue_history.issue_remark,
@@ -198,11 +216,23 @@ const returnAsset = (req, res) => {
       `
       UPDATE assets
       SET
-        status = 'Available',
-        return_date = DATE('now')
+        available_quantity = available_quantity + ?,
+        issued_quantity = issued_quantity - ?,
+        return_date = DATE('now'),
+        status =
+          CASE
+            WHEN (issued_quantity - ?) <= 0
+            THEN 'Available'
+            ELSE 'Issued'
+          END
       WHERE id = ?
     `,
-    ).run(issue.asset_id);
+    ).run(
+      issue.issued_quantity,
+      issue.issued_quantity,
+      issue.issued_quantity,
+      issue.asset_id,
+    );
 
     res.json({
       message: "Asset returned successfully",

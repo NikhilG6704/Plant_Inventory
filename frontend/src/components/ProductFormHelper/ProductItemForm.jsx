@@ -44,6 +44,43 @@ function ProductItemForm({ item, index, handleItemChange }) {
           />
         </div>
 
+        {/* Quantity */}
+        <div>
+          <label className="block mb-2 font-medium">
+            Quantity <span className="text-red-500">*</span>
+          </label>
+
+          <input
+            type="number"
+            min="1"
+            value={item.quantity || 1}
+            onChange={(e) =>
+              handleItemChange(index, "quantity", e.target.value)
+            }
+            placeholder="Enter Quantity"
+            className={`w-full rounded-lg p-3 ${
+              !item.quantity || Number(item.quantity) < 1
+                ? "border-2 border-red-300"
+                : "border border-gray-300"
+            }`}
+          />
+        </div>
+
+        {/* Serial Number */}
+        <div>
+          <label className="block mb-2 font-medium">Serial Number</label>
+
+          <input
+            type="text"
+            value={item.serialNumber}
+            onChange={(e) =>
+              handleItemChange(index, "serialNumber", e.target.value)
+            }
+            placeholder="Leave blank for N/A"
+            className="w-full border rounded-lg p-3"
+          />
+        </div>
+
         {/* Description */}
         <div className="md:col-span-2">
           <label className="block mb-2 font-medium">Description</label>
@@ -56,27 +93,6 @@ function ProductItemForm({ item, index, handleItemChange }) {
             placeholder="Enter Description"
             rows="3"
             className="w-full border rounded-lg p-3"
-          />
-        </div>
-
-        {/* Serial Number */}
-        <div>
-          <label className="block mb-2 font-medium">
-            Serial Number <span className="text-red-500">*</span>
-          </label>
-
-          <input
-            type="text"
-            value={item.serialNumber}
-            onChange={(e) =>
-              handleItemChange(index, "serialNumber", e.target.value)
-            }
-            placeholder="Enter Serial Number"
-            className={`w-full rounded-lg p-3 ${
-              item.serialNumber === ""
-                ? "border-2 border-red-300"
-                : "border border-gray-300"
-            }`}
           />
         </div>
 

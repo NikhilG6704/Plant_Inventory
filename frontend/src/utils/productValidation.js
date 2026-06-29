@@ -17,8 +17,25 @@ export const validateProductForm = (prNo, itemCount, items) => {
   }
 
   for (const item of items) {
-    if (!item.name?.trim() || !item.itemCode?.trim() || !item.dateAdded) {
-      toast.error("Please fill all required item fields");
+    if (!item.name?.trim()) {
+      toast.error("Item Name is required");
+      return false;
+    }
+
+    if (!item.itemCode?.trim()) {
+      toast.error("Item Code is required");
+      return false;
+    }
+
+    if (!item.dateAdded) {
+      toast.error("Date Added is required");
+      return false;
+    }
+
+    const quantity = Number(item.quantity);
+
+    if (!quantity || quantity < 1) {
+      toast.error(`Quantity for "${item.name || "Item"}" must be at least 1`);
       return false;
     }
   }

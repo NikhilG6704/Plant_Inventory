@@ -30,6 +30,11 @@ function Products() {
         itemCode: asset.item_code,
         description: asset.description,
         serialNumber: asset.serial_number,
+
+        quantity: asset.quantity || 1,
+        availableQuantity: asset.available_quantity || 0,
+        issuedQuantity: asset.issued_quantity || 0,
+
         dateAdded: asset.date_added,
         isILMS: asset.is_ilms ? "Yes" : "No",
         status: asset.status,

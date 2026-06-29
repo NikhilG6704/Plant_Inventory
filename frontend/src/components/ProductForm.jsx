@@ -24,6 +24,7 @@ function ProductForm({ addProduct }) {
       itemCode: "",
       description: "",
       serialNumber: "",
+      quantity: 1,
       dateAdded: new Date().toISOString().split("T")[0],
       isILMS: "No",
     }));

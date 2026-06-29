@@ -62,18 +62,21 @@ const createAssets = (req, res) => {
     const prId = prResult.lastInsertRowid;
 
     const assetStmt = db.prepare(`
-      INSERT INTO assets (
-        pr_id,
-        item_name,
-        item_code,
-        description,
-        serial_number,
-        is_ilms,
-        date_added,
-        status
-      )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    `);
+  INSERT INTO assets (
+    pr_id,
+    item_name,
+    item_code,
+    description,
+    serial_number,
+    quantity,
+    available_quantity,
+    issued_quantity,
+    is_ilms,
+    date_added,
+    status
+  )
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+`);
 
     for (const item of items) {
       let serialNumber = item.serialNumber?.trim();
@@ -102,12 +105,25 @@ const createAssets = (req, res) => {
         }
       }
 
+      const quantity = Number(item.quantity);
+
+      if (!quantity || quantity < 1) {
+        return res.status(400).json({
+          error: "Quantity must be at least 1",
+        });
+      }
+
       assetStmt.run(
         prId,
         item.name,
         item.itemCode,
         item.description,
         serialNumber,
+
+        quantity,
+        quantity,
+        0,
+
         item.isILMS === "Yes" ? 1 : 0,
         item.dateAdded,
         "Available",
@@ -140,6 +156,7 @@ const updateAsset = (req, res) => {
       item_code,
       description,
       serial_number,
+      quantity,
       is_ilms,
     } = req.body;
 
@@ -158,6 +175,21 @@ const updateAsset = (req, res) => {
         error: "Asset not found",
       });
     }
+    const newQuantity = Number(quantity);
+
+    if (!newQuantity || newQuantity < 1) {
+      return res.status(400).json({
+        error: "Quantity must be at least 1",
+      });
+    }
+
+    if (newQuantity < asset.issued_quantity) {
+      return res.status(400).json({
+        error: `Quantity cannot be less than already issued quantity (${asset.issued_quantity})`,
+      });
+    }
+
+    const newAvailableQuantity = newQuantity - asset.issued_quantity;
 
     let finalSerial = serial_number?.trim();
 
@@ -191,15 +223,28 @@ const updateAsset = (req, res) => {
     db.prepare(
       `
       UPDATE assets
-      SET
-        item_name = ?,
-        item_code = ?,
-        description = ?,
-        serial_number = ?,
-        is_ilms = ?
-      WHERE id = ?
+SET
+  item_name = ?,
+  item_code = ?,
+  description = ?,
+  serial_number = ?,
+  quantity = ?,
+  available_quantity = ?,
+  is_ilms = ?
+WHERE id = ?
     `,
-    ).run(item_name, item_code, description, finalSerial, is_ilms ? 1 : 0, id);
+    ).run(
+      item_name,
+      item_code,
+      description,
+      finalSerial,
+
+      newQuantity,
+      newAvailableQuantity,
+
+      is_ilms ? 1 : 0,
+      id,
+    );
 
     db.prepare(
       `
